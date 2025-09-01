@@ -1,7 +1,0 @@
-{
-  "title": "Liga TEC",
-  "type": "single",
-  "roster": [
-    { "id": 1, "name": "Ana", "weight": 60, "age": 21 }
-  ]
-}
