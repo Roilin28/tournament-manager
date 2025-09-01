@@ -1,0 +1,112 @@
+# version: "3.9"
+
+# services:
+#   api:
+#     build: .
+#     container_name: tournament-designer-api
+#     ports:
+#       - "3000:3000"
+#     networks:
+#       - internal_net
+#     environment:
+#       - PORT=3000
+#       - MONGO_URI=mongodb://mongo:27017/tournament_designer
+#     volumes:
+#       - .:/app
+#       - /app/node_modules
+#     depends_on:
+#       - mongo
+#     command: npm run dev
+
+#   mongo:
+#     image: mongo:6.0
+#     container_name: tournament-designer-db
+#     restart: always
+#     ports:
+#       - "27017:27017"
+#     networks:
+#       - internal_net
+#     volumes:
+#       - mongo_data:/data/db
+
+# volumes:
+#   mongo_data:
+
+# networks:
+#   internal_net:
+#     driver: bridge
+services:
+  api:
+    build: .
+    container_name: tournament-designer-api
+    ports:
+      - "3000:3000"
+    networks:
+      - internal_net
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/tournament_designer
+      - KAFKA_BROKERS=kafka:9092
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      mongo:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    command: npm run dev
+
+  mongo:
+    image: mongo:6.0
+    container_name: tournament-designer-db
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - internal_net
+    volumes:
+      - mongo_data:/data/db
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    networks:
+      - internal_net
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER        
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      
+  consumer:
+    build: ./consumer
+    container_name: tournament-consumer
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - TOPIC=torneo
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+
+networks:
+  internal_net:
+    driver: bridge

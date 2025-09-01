@@ -1,0 +1,17 @@
+tournament-manager-api/dist
+tournament-manager-api/node_modules
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.*
+
+# Docker / datos locales
+docker-data/
+mongo_data/
