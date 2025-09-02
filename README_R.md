@@ -1,5 +1,10 @@
 
 
+ESTUDIANTES: 
+
+Roilin Navarro Vargas 2023213657
+Luis Fernando Ureña Corrales 2023064329
+
 # Tournament Manager – API + Kafka Consumer
 
 API en Node/Express/TypeScript que guarda torneos en MongoDB y publica el mismo registro en Kafka 
